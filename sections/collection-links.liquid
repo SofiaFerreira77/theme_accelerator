@@ -21,13 +21,7 @@
   type="module"
   fetchpriority="low"
 ></script>
-{% 
-  # Custom code
-  # Date: 24/09/2025
-  # By: Sara
-  # Description: If statement added to prevent loading when there is no list configured. This is only for demo purposes
-%}
-{% if collection_list.first != 'CollectionListDrop' %}
+
 <div class="section-background color-{{ section.settings.color_scheme }}"></div>
 <div
   class="section section--{{ section.settings.section_width }} color-{{ section.settings.color_scheme }} spacing-style"
@@ -100,7 +94,7 @@
     {% endcase %}
   </collection-links-component>
 </div>
-{% endif %}
+
 {% # theme-check-disable ValidBlockTarget %}
 {% stylesheet %}
   collection-links-component {
