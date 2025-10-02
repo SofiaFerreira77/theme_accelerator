@@ -51,7 +51,6 @@ class PickupAvailabilityComponent extends DialogComponent {
    * @param {string} variantId
    */
   updateVariant(variantId) {
-    console.log('Updating variant in drawer to ID:', variantId);
     if (!variantId) return;
     this.variantId = variantId;
     this.updateDrawerSelect(variantId);
@@ -96,14 +95,14 @@ class PickupAvailabilityComponent extends DialogComponent {
    */
   storeToListItem(store) {
     const availableText = store.available
-      ? `Available for pickup at ${store.pick_up_time}`
+      ? store.pick_up_time
       : 'Unavailable';
 
     const iconTemplate = document.querySelector('#pickup-icon-template')?.innerHTML || '';
 
     return `
       <li class="pickup-availability__item" role="listitem">
-        <span class="pickup-availability__status ${store.available ? 'pickup-availability__status--available' : 'pickup-availability__status--unavailable'}" aria-label="${store.available ? 'Available' : 'Unavailable'}">
+        <span class="pickup-availability__status-icon ${store.available ? 'pickup-availability__status--available' : 'pickup-availability__status--unavailable'}" aria-label="${store.available ? 'Available' : 'Unavailable'}">
             ${iconTemplate}
         </span>
         <div class="pickup-availability__info">
@@ -114,7 +113,7 @@ class PickupAvailabilityComponent extends DialogComponent {
               ? `<a href="tel:${store.location.phone}" class="pickup-availability__phone">${store.location.phone}</a><br>`
               : ''
           }
-          <span class="pickup-availability__time">${availableText}</span>
+          <p class="pickup-availability__time" aria-live="polite">${availableText}</p>
         </div>
       </li>
     `;

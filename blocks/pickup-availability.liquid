@@ -19,6 +19,23 @@
       "info": "The text displayed on the button that opens the drawer."
     },
     {
+      "type": "select",
+      "id": "button_button_style",
+      "label": "Button style",
+      "options": [
+        { "value": "primary", "label": "Primary" },
+        { "value": "secondary", "label": "Secondary" },
+      ],
+      "default": "primary"
+    },
+    {
+      "type": "checkbox",
+      "id": "button_button_remove_style",
+      "label": "Remove button styles",
+      "info": "Use this option to remove all button styles and apply your own custom styles.",
+      "default": false
+    },
+    {
       "type": "range",
       "id": "padding-block-start",
       "label": "t:settings.top",
@@ -76,6 +93,12 @@
       "default": "Select a variant"
     },
     {
+      "type": "checkbox",
+      "id": "variant_selector_show_label",
+      "label": "Show variant selector label",
+      "default": true
+    },
+    {
       "type": "text",
       "id": "drawer_heading",
       "label": "Drawer heading",
@@ -88,7 +111,6 @@
       "options": [
         { "value": "inventory", "label": "Circle" },
         { "value": "arrow", "label": "Arrow" },
-        { "value": "chevron", "label": "Chevron" },
       ],
       "default": "inventory"
     },
@@ -127,7 +149,8 @@
   <div class="pickup-availability__button">
     <button
       id="openStoreAvailabilityDrawer"
-      class="button button--secondary button-unstyled"
+      class="button button--{{ block.settings.button_button_style }} 
+      {% if block.settings.button_button_remove_style %}button-unstyled{% endif %}"
       type="button"
       aria-controls="pickupDrawer"
       on:click="/open"
@@ -139,6 +162,7 @@
   <!-- Drawer -->
   <dialog
     ref="dialog"
+    aria-labelledby="pickup-availability-title"
     class="pickup-availability-drawer__dialog dialog-modal dialog-drawer"
     scroll-lock
     style="
@@ -149,9 +173,9 @@
       
       <!-- Drawer Header -->
       <div class="pickup-availability-drawer__header">
-        <span class="pickup-availability-drawer__heading h3">
+        <h3 id="pickup-availability-title" class="pickup-availability-drawer__heading">
           {{ block.settings.drawer_heading }}
-        </span>
+        </h3>
 
         <button
           ref="closeButton"
@@ -167,21 +191,23 @@
 
       <!-- Drawer Variant Selector -->
       {% if product.variants.size > 1 and block.settings.show_variant_selector %}
-        <label for="drawerVariantSelector" class="visually-hidden">
-          {{ block.settings.variant_selector_label }}
-        </label>
-        <select id="drawerVariantSelector">
-          {% for variant in product.variants %}
-            <option value="{{ variant.id }}" {% if variant.id == product.selected_or_first_available_variant.id %}selected{% endif %}>
-              {{ variant.title }}
-            </option>
-          {% endfor %}
-        </select>
+        <div class="pickup-availability__variant-selector">
+          <label for="drawerVariantSelector" class="{% if block.settings.variant_selector_show_label %}{% else %}visually-hidden{% endif %}">
+            {{ block.settings.variant_selector_label }}
+          </label>
+          <select id="drawerVariantSelector">
+            {% for variant in product.variants %}
+              <option value="{{ variant.id }}" {% if variant.id == product.selected_or_first_available_variant.id %}selected{% endif %}>
+                {{ variant.title }}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
       {% endif %}
   
       <!-- Drawer Content - Stores list -->
-       <scroll-hint>
-        <div class="pickup-availability-content"></div>
+      <scroll-hint>
+        <div class="pickup-availability-content {% if block.settings.drawer_pickup_icon == 'inventory'  %}icon--circles{% endif %}"></div>
       </scroll-hint>
 
       <!-- Drawer Content - Stores Status Icon -->
@@ -201,7 +227,7 @@
   }
 
   .pickup-availability__button {
-    margin: var(--padding-block-start) var(--padding-inline-end) var(--padding-block-end) var(--padding-inline-start);
+    padding: var(--padding-block-start) var(--padding-inline-end) var(--padding-block-end) var(--padding-inline-start);
   }
 
   .pickup-availability-drawer__dialog {
@@ -239,11 +265,29 @@
     }
   }
 
+  .pickup-availability-drawer__heading {
+    margin: 0;
+  }
+
+  .pickup-availability__variant-selector {
+    display: inline-flex;
+    gap: 0.5rem;
+    padding: 0 var(--pickup-availability-drawer-padding);
+
+    @media screen and (min-width: 750px) {
+      padding: 0 var(--pickup-availability-drawer-padding-desktop);
+    }
+  }
+
   .pickup-availability-content {
     padding-inline: var(--pickup-availability-drawer-padding);
     font-size: var(--font-size--md);
     height: calc(100vh - 72px);
     overflow-y: auto;
+
+    @media screen and (min-width: 750px) {
+      padding: var(--pickup-availability-drawer-padding-desktop);
+    }
   }
 
   .pickup-availability__list {
@@ -256,17 +300,25 @@
     display: flex;
     align-items: flex-start;
     gap: 0.75rem;
-    margin-bottom: 15px;
     border-bottom: 1px solid #eee;
+    margin-bottom: 15px;
     padding-bottom: 10px;
   }
 
-  .pickup-availability__status {
+  .pickup-availability__status-icon {
     display: inline-block;
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    margin-top: 4px;
+    width: var(--font-size--md);
+    height: var(--font-size--md);
+    margin-top: 5px;
+  }
+
+  .pickup-availability__status-icon svg {
+    width: var(--font-size--md);
+    height: var(--font-size--md);
+  }
+
+  .icon--circles .pickup-availability__status-icon circle:first-of-type {
+    opacity: 0.3;
   }
 
   .pickup-availability__status--available {
@@ -287,12 +339,16 @@
   }
 
   .pickup-availability__phone {
-    color: var(--color-text-subtle);
     font-size: var(--font-size--xs);
+    text-decoration: underline;
+
+    &:hover {
+      text-decoration: none;
+    }
   }
 
   .pickup-availability__time {
-    color: var(--color-text-subtle);
-    font-size: var(--font-size--xxs);
+    opacity: .7;
+    font-size: var(--font-size--xs);
   }
 {% endstylesheet %}
