@@ -1,0 +1,298 @@
+{%- doc -%}
+  Renders the Pickup Store Availability drawer, a slide-out panel that displays
+  the list of store availability for a product variant, including the button to open it.
+{%- enddoc -%}
+
+{% schema %}
+{
+  "name": "Pickup availability",
+  "settings": [
+    {
+      "type": "header",
+      "content": "Button Settings"
+    },
+    {
+      "type": "text",
+      "id": "button_label",
+      "label": "Button label",
+      "default": "Check store availability",
+      "info": "The text displayed on the button that opens the drawer."
+    },
+    {
+      "type": "range",
+      "id": "padding-block-start",
+      "label": "t:settings.top",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "unit": "px",
+      "default": 0
+    },
+    {
+      "type": "range",
+      "id": "padding-block-end",
+      "label": "t:settings.bottom",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "unit": "px",
+      "default": 0
+    },
+    {
+      "type": "range",
+      "id": "padding-inline-start",
+      "label": "t:settings.left",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "unit": "px",
+      "default": 0
+    },
+    {
+      "type": "range",
+      "id": "padding-inline-end",
+      "label": "t:settings.right",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "unit": "px",
+      "default": 0
+    },
+    {
+      "type": "header",
+      "content": "Drawer"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_variant_selector",
+      "label": "Show variant selector",
+      "info": "Display a dropdown to select different product variant within the drawer.",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "variant_selector_label",
+      "label": "Variant selector label",
+      "default": "Select a variant"
+    },
+    {
+      "type": "text",
+      "id": "drawer_heading",
+      "label": "Drawer heading",
+      "default": "Store Availability"
+    },
+    {
+      "type": "select",
+      "id": "drawer_pickup_icon",
+      "label": "Default icon",
+      "options": [
+        { "value": "inventory", "label": "Circle" },
+        { "value": "arrow", "label": "Arrow" },
+        { "value": "chevron", "label": "Chevron" },
+      ],
+      "default": "inventory"
+    },
+    {
+      "type": "color",
+      "id": "drawer_pickup_status_available",
+      "label": "Drawer icon color - Available",
+      "default": "#5cd177ff"
+    }, 
+    {
+      "type": "color",
+      "id": "drawer_pickup_status_unavailable",
+      "label": "Drawer icon color - Unavailable",
+      "default": "#e25d6bff"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Pickup availability"
+    }
+  ]
+}
+{% endschema %}
+
+<script
+  src="{{ 'pickup-availability.js' | asset_url }}"
+  type="module"
+  fetchpriority="low"
+></script>
+
+<pickup-availability-component 
+  data-variant-id="{{ product.selected_or_first_available_variant.id }}"
+  class="pickup-availability-drawer">
+
+  <!-- Button to open the drawer -->
+  <div class="pickup-availability__button">
+    <button
+      id="openStoreAvailabilityDrawer"
+      class="button button--secondary button-unstyled"
+      type="button"
+      aria-controls="pickupDrawer"
+      on:click="/open"
+      style="{% render 'spacing-style', settings: block.settings %}">
+      {{ block.settings.button_label }}
+    </button>
+  </div>
+
+  <!-- Drawer -->
+  <dialog
+    ref="dialog"
+    class="pickup-availability-drawer__dialog dialog-modal dialog-drawer"
+    scroll-lock
+    style="
+      --status-available: {{ block.settings.drawer_pickup_status_available }};
+      --status-unavailable: {{ block.settings.drawer_pickup_status_unavailable }};"
+  >
+    <div class="pickup-availability-drawer__inner">
+      
+      <!-- Drawer Header -->
+      <div class="pickup-availability-drawer__header">
+        <span class="pickup-availability-drawer__heading h3">
+          {{ block.settings.drawer_heading }}
+        </span>
+
+        <button
+          ref="closeButton"
+          class="button close-button pickup-availability-drawer__close-button button-unstyled"
+          on:click="/close"
+          aria-label="Close Store Availability"
+        >
+          <span class="svg-wrapper">
+            {{- 'icon-close.svg' | inline_asset_content -}}
+          </span>
+        </button>
+      </div>
+
+      <!-- Drawer Variant Selector -->
+      {% if product.variants.size > 1 and block.settings.show_variant_selector %}
+        <label for="drawerVariantSelector" class="visually-hidden">
+          {{ block.settings.variant_selector_label }}
+        </label>
+        <select id="drawerVariantSelector">
+          {% for variant in product.variants %}
+            <option value="{{ variant.id }}" {% if variant.id == product.selected_or_first_available_variant.id %}selected{% endif %}>
+              {{ variant.title }}
+            </option>
+          {% endfor %}
+        </select>
+      {% endif %}
+  
+      <!-- Drawer Content - Stores list -->
+       <scroll-hint>
+        <div class="pickup-availability-content"></div>
+      </scroll-hint>
+
+      <!-- Drawer Content - Stores Status Icon -->
+      <template id="pickup-icon-template">
+        {{ 'icon-' | append: block.settings.drawer_pickup_icon | append: '.svg' | inline_asset_content }}
+      </template>
+    </div>
+  </dialog>
+
+  {% render 'pickup-data-json', product: product %}
+</pickup-availability-component>
+
+{% stylesheet %}
+  .pickup-availability-drawer {
+    --pickup-availability-drawer-padding: var(--padding-lg) var(--padding-xl);
+    --pickup-availability-drawer-padding-desktop: var(--padding-xl) var(--padding-2xl);
+  }
+
+  .pickup-availability__button {
+    margin: var(--padding-block-start) var(--padding-inline-end) var(--padding-block-end) var(--padding-inline-start);
+  }
+
+  .pickup-availability-drawer__dialog {
+    position: fixed;
+    border-radius: 0;
+    width: var(--sidebar-width);
+    max-width: 95vw;
+    height: 100%;
+    margin: 0 0 0 auto;
+    padding: 0;
+    border-left: var(--style-border-drawer);
+    box-shadow: var(--shadow-drawer);
+    background-color: var(--color-background);
+  }
+
+  .pickup-availability-drawer__dialog:modal {
+    max-height: 100dvh;
+    overflow-y: hidden;
+  }
+
+  .pickup-availability-drawer__header{
+    background-color: var(--color-background);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: var(--pickup-availability-drawer-padding);
+    border-bottom: var(--style-border-width) solid none;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+
+    @media screen and (min-width: 750px) {
+      padding: var(--pickup-availability-drawer-padding-desktop);
+    }
+  }
+
+  .pickup-availability-content {
+    padding-inline: var(--pickup-availability-drawer-padding);
+    font-size: var(--font-size--md);
+    height: calc(100vh - 72px);
+    overflow-y: auto;
+  }
+
+  .pickup-availability__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .pickup-availability__item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    margin-bottom: 15px;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 10px;
+  }
+
+  .pickup-availability__status {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    margin-top: 4px;
+  }
+
+  .pickup-availability__status--available {
+    color: var(--status-available);
+  }
+
+  .pickup-availability__status--unavailable {
+    color: var(--status-unavailable);
+  }
+
+  .pickup-availability__info {
+    font-size: var(--font-size--sm);
+    line-height: 1.4;
+  }
+
+  .pickup-availability__name {
+    font-weight: 500;
+  }
+
+  .pickup-availability__phone {
+    color: var(--color-text-subtle);
+    font-size: var(--font-size--xs);
+  }
+
+  .pickup-availability__time {
+    color: var(--color-text-subtle);
+    font-size: var(--font-size--xxs);
+  }
+{% endstylesheet %}

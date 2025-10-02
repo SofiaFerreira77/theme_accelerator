@@ -1,0 +1,27 @@
+<script id="pickup-data" type="application/json">
+{
+  "variants": {
+    {% for variant in product.variants %}
+      "{{ variant.id }}": {
+        "id": "{{ variant.id }}",
+        "title": {{ variant.title | json }},
+        "stores": [
+          {% for store in variant.store_availabilities %}
+            {
+              "available": {{ store.available | json }},
+              "pick_up_time": {{ store.pick_up_time | json }},
+              "location": {
+                "name": {{ store.location.name | json }},
+                "phone": {{ store.location.phone | json }},
+                "address1": {{ store.location.address.address1 | json }},
+                "city": {{ store.location.address.city | json }},
+                "country": {{ store.location.address.country | json }}
+              }
+            }{% unless forloop.last %},{% endunless %}
+          {% endfor %}
+        ]
+      }{% unless forloop.last %},{% endunless %}
+    {% endfor %}
+  }
+}
+</script>
