@@ -233,6 +233,24 @@
               },
               "block_order": []
             },
+            "pickup_availability_PWpBgC": {
+              "type": "pickup-availability",
+              "name": "Pickup availability",
+              "settings": {
+                "button_label": "Check store availability",
+                "padding-block-start": 0,
+                "padding-block-end": 0,
+                "padding-inline-start": 0,
+                "padding-inline-end": 0,
+                "show_variant_selector": true,
+                "variant_selector_label": "Select a variant",
+                "drawer_heading": "Store Availability",
+                "drawer_pickup_icon": "inventory",
+                "drawer_pickup_status_available": "#5cd177ff",
+                "drawer_pickup_status_unavailable": "#e25d6bff"
+              },
+              "blocks": {}
+            },
             "text_aEtTtq": {
               "type": "text",
               "name": "Product description",
@@ -329,6 +347,7 @@
             "variant_picker_R3rGDr",
             "product_inventory_NHx4Uz",
             "buy_buttons_eYQEYi",
+            "pickup_availability_PWpBgC",
             "text_aEtTtq",
             "accordion_99rpTp"
           ]

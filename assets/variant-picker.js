@@ -21,6 +21,27 @@ export default class VariantPicker extends Component {
     super.connectedCallback();
 
     this.addEventListener('change', this.variantChanged.bind(this));
+
+    // Listen for drawer telling PDP to change variant
+    document.addEventListener('pickup:variantSelected', (event) => {
+      /** @type {CustomEvent} */
+      const customEvent = /** @type {CustomEvent} */ (event);
+      const variantId = customEvent.detail?.id;
+      if (!variantId) return;
+
+      // Use built-in updateSelectedOption to apply change
+      try {
+        const targetOption = this.querySelector(`[data-variant-id="${variantId}"], option[value="${variantId}"]`);
+        if (!targetOption) {
+          console.warn('Could not find variant option for id', variantId);
+          return;
+        }
+        this.updateSelectedOption(targetOption);
+        this.dispatchEvent(new Event('change', { bubbles: true }));
+      } catch (err) {
+        console.warn('Could not sync drawer variant back to PDP', err);
+      }
+    });
   }
 
   /**
@@ -168,11 +189,22 @@ export default class VariantPicker extends Component {
 
           // We grab the variant object from the response and dispatch an event with it.
           if (this.selectedOptionId) {
+            const variantJson = JSON.parse(textContent);
+
             this.dispatchEvent(
               new VariantUpdateEvent(JSON.parse(textContent), this.selectedOptionId, {
                 html,
                 productId: this.dataset.productId ?? '',
                 newProduct,
+              })
+            );
+
+            document.dispatchEvent(
+              new CustomEvent('variant:update', {
+                detail: {
+                  id: variantJson?.id ?? null,
+                  variant: variantJson,
+                },
               })
             );
           }
