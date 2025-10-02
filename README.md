@@ -30,16 +30,6 @@ It leverages Horizon’s modern and flexible structure while adding new features
     shopify theme dev --store your-store-name
 ```
 
-## Start local development and preview changes in real-time.
-
-Development
-
-Use shopify theme dev to serve and preview your theme.
-
-Run npm run build (if configured) for production-ready assets.
-
-Follow Shopify’s theme development guide for best practices.
-
 Deployment
 
 When ready to go live:
